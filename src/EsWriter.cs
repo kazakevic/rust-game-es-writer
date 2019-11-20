@@ -26,6 +26,10 @@ namespace Oxide.Plugins
         {
             foreach (var player in BasePlayer.activePlayerList)
             {
+                Puts($"Player {player.displayName}");
+                if (!player.IsConnected)
+                    continue;
+
                 CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
             }
         }
