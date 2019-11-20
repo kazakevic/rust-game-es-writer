@@ -35,7 +35,7 @@ namespace Oxide.Plugins
         private void OnServerSave()
         {
             foreach (var player in BasePlayer.activePlayerList) {
-                Puts($"Stats {player.stats}");
+                Puts($"Stats {player.stats.combat.ToString()}");
             }
 
         }
