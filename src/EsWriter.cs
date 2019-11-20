@@ -34,8 +34,17 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
-            foreach (var player in BasePlayer.activePlayerList) {
-                Puts($"Stats {player.stats.combat.ToString()}");
+            foreach (var player in BasePlayer.activePlayerList)
+            {
+                var esPlayer = new SerializablePlayer();
+                var stats = new PlayerStats();
+                esPlayer.name = player.displayName;
+                esPlayer.isOnline = player.IsConnected;
+                ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
+                stats.kills = storage.Get("kill_player");
+                stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
+                esPlayer.stats = stats;
+                CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
             }
 
         }
