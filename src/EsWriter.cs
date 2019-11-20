@@ -25,13 +25,6 @@ namespace Oxide.Plugins
             CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
         }
 
-        void OnPlayerDisconnected(BasePlayer player, string reason)
-        {
-            var esPlayer = new SerializablePlayer();
-            esPlayer.isOnline = player.IsConnected;
-            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
-        }
-
         private void OnServerSave()
         {
             foreach (var player in BasePlayer.activePlayerList)
@@ -43,6 +36,8 @@ namespace Oxide.Plugins
                 ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
                 stats.kills = storage.Get("kill_player");
                 stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
+                stats.headShots = storage.Get("headshot");
+                stats.suicides = storage.Get("death_suicide");
                 esPlayer.stats = stats;
                 CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
             }
@@ -77,6 +72,7 @@ namespace Oxide.Plugins
             public int kills;
             public int deaths;
             public int headShots;
+            public int suicides;
         }
     }
 }
