@@ -19,29 +19,15 @@ namespace Oxide.Plugins
 
         void OnPlayerInit(BasePlayer player)
         {
-            var esPlayer = new SerializablePlayer();
-            esPlayer.name = player.displayName;
-            esPlayer.isOnline = player.IsConnected;
-            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
+            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
         }
 
         private void OnServerSave()
         {
             foreach (var player in BasePlayer.activePlayerList)
             {
-                var esPlayer = new SerializablePlayer();
-                var stats = new PlayerStats();
-                esPlayer.name = player.displayName;
-                esPlayer.isOnline = player.IsConnected;
-                ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
-                stats.kills = storage.Get("kill_player");
-                stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
-                stats.headShots = storage.Get("headshot");
-                stats.suicides = storage.Get("death_suicide");
-                esPlayer.stats = stats;
-                CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(esPlayer));
+                CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
             }
-
         }
 
         void CreateOrUpdatePlayer(ulong id, string data)
@@ -57,6 +43,21 @@ namespace Oxide.Plugins
 
                 Puts($"Answered: {response}");
             }, this, RequestMethod.PUT, headers);
+        }
+
+        SerializablePlayer getSerializablePlayer(BasePlayer player)
+        {
+            var esPlayer = new SerializablePlayer();
+            var esStats = new PlayerStats();
+            ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
+            esPlayer.name = player.displayName;
+            esPlayer.isOnline = player.IsConnected;
+            esStats.kills = storage.Get("kill_player");
+            esStats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
+            esStats.headShots = storage.Get("headshot");
+            esStats.suicides = storage.Get("death_suicide");
+            esPlayer.stats = esStats;
+            return esPlayer;
         }
 
         class SerializablePlayer
