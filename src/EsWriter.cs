@@ -34,6 +34,10 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
+            foreach (var player in BasePlayer.activePlayerList) {
+                Puts($"Stats {player.stats}");
+            }
+
         }
 
         void CreateOrUpdatePlayer(ulong id, string data)
@@ -56,6 +60,14 @@ namespace Oxide.Plugins
             public ulong id;
             public string name;
             public bool isOnline;
+            public PlayerStats stats;
+        }
+
+        class PlayerStats
+        {
+            public int kills;
+            public int deaths;
+            public int headShots;
         }
     }
 }
