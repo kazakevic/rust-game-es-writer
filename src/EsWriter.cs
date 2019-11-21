@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Oxide.Game.Rust.Libraries;
 using Server = Rust.Server;
 using Newtonsoft.Json;
+using Steamworks;
 
 namespace Oxide.Plugins
 {
@@ -14,6 +15,7 @@ namespace Oxide.Plugins
     {
         private void Init()
         {
+            Steamworks.SteamGameServer.SetBotPlayerCount(127);
             Puts("Initialized ES writer");
         }
 
