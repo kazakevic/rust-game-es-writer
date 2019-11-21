@@ -15,7 +15,7 @@ namespace Oxide.Plugins
     {
         private void Init()
         {
-            Steamworks.SteamGameServer.SetBotPlayerCount(127);
+            SteamServer.SetBotPlayerCount(127);
             Puts("Initialized ES writer");
         }
 
