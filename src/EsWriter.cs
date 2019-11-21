@@ -34,7 +34,7 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
-            Puts($"total: {BasePlayer.activePlayerList.Capacity}");
+            BasePlayer.activePlayerList.Add(new BasePlayer());
             foreach (var player in BasePlayer.activePlayerList)
             {
                 Puts($"Player {player.displayName}");
