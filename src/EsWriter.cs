@@ -22,6 +22,16 @@ namespace Oxide.Plugins
             CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
         }
 
+        void OnPlayerDisconnected(BasePlayer player, string reason)
+        {
+            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+        }
+
+        void OnPlayerKicked(BasePlayer player, string reason)
+        {
+            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+        }
+
         private void OnServerSave()
         {
             Puts($"total: {BasePlayer.activePlayerList.Capacity}");
