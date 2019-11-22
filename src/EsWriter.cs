@@ -17,6 +17,19 @@ namespace Oxide.Plugins
             Puts("Initialized ES writer");
         }
 
+        object OnPlayerDie(BasePlayer player, HitInfo info)
+        {
+            var attacker = info.InitiatorPlayer;
+            if (!(attacker == null || attacker.IsNpc)) {
+                IDictionary<int, string> lastKiller = new Dictionary<int, string>();
+                lastKiller.Add(1,attacker.displayName);
+                var data = JsonConvert.SerializeObject(lastKiller);
+                CreateOrUpdatePlayer(player.userID, data);
+            }
+
+            return null;
+        }
+
         void OnPlayerInit(BasePlayer player)
         {
             var data = JsonConvert.SerializeObject(InitPluginPlayer(player));
