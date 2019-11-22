@@ -5,7 +5,6 @@ using System.Diagnostics;
 using Oxide.Game.Rust.Libraries;
 using Server = Rust.Server;
 using Newtonsoft.Json;
-using Steamworks;
 
 namespace Oxide.Plugins
 {
@@ -15,36 +14,32 @@ namespace Oxide.Plugins
     {
         private void Init()
         {
-            SteamServer.SetBotPlayerCount(127);
             Puts("Initialized ES writer");
         }
 
         void OnPlayerInit(BasePlayer player)
         {
-            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+            var data = JsonConvert.SerializeObject(InitPluginPlayer(player));
+            CreateOrUpdatePlayer(player.userID, data);
         }
 
         void OnPlayerDisconnected(BasePlayer player, string reason)
         {
-            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+            UpdatePlayerStatus(player, false);
         }
 
         void OnPlayerKicked(BasePlayer player, string reason)
         {
-            CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+            UpdatePlayerStatus(player, false);
         }
 
         private void OnServerSave()
         {
-            var play = new BasePlayer();
-            BasePlayer.activePlayerList.Add(play);
             foreach (var player in BasePlayer.activePlayerList)
             {
-                Puts($"Player {player.displayName}");
                 if (!player.IsConnected)
                     continue;
-
-                CreateOrUpdatePlayer(player.userID, JsonConvert.SerializeObject(getSerializablePlayer(player)));
+                UpdatePlayerStats(player);
             }
         }
 
@@ -63,30 +58,44 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        SerializablePlayer getSerializablePlayer(BasePlayer player)
+        PluginPlayer InitPluginPlayer(BasePlayer player)
         {
-            var esPlayer = new SerializablePlayer();
-            var esStats = new PlayerStats();
-            ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
+            var esPlayer = new PluginPlayer();
             esPlayer.name = player.displayName;
-            esPlayer.isOnline = player.IsConnected;
-            esStats.kills = storage.Get("kill_player");
-            esStats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
-            esStats.headShots = storage.Get("headshot");
-            esStats.suicides = storage.Get("death_suicide");
-            esPlayer.stats = esStats;
+            esPlayer.isOnline = true;
             return esPlayer;
         }
 
-        class SerializablePlayer
+        void UpdatePlayerStats(BasePlayer player)
+        {
+            ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
+            var stats = new PluginPlayerStats();
+            stats.kills = storage.Get("kill_player");
+            stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
+            stats.headShots = storage.Get("headshot");
+            stats.suicides = storage.Get("death_suicide");
+            var data = JsonConvert.SerializeObject(stats);
+            CreateOrUpdatePlayer(player.userID, data);
+        }
+
+        void UpdatePlayerStatus(BasePlayer player,  bool isConnected)
+        {
+            var pl = new PluginPlayer();
+            pl.name = player.displayName;
+            pl.isOnline = isConnected;
+            var data = JsonConvert.SerializeObject(pl);
+            CreateOrUpdatePlayer(player.userID, data);
+        }
+
+        class PluginPlayer
         {
             public ulong id;
             public string name;
             public bool isOnline;
-            public PlayerStats stats;
+            public PluginPlayerStats stats;
         }
 
-        class PlayerStats
+        class PluginPlayerStats
         {
             public int kills;
             public int deaths;
