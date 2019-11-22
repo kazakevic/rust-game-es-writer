@@ -20,7 +20,9 @@ namespace Oxide.Plugins
         object OnPlayerDie(BasePlayer player, HitInfo info)
         {
             var attacker = info.InitiatorPlayer;
-            if (attacker == null || attacker.IsNpc) {
+            if (attacker == null || attacker.IsNpc)
+            {
+                return null;
             }
             else
             {
