@@ -12,6 +12,8 @@ namespace Oxide.Plugins
     [Description("Writes data to ElasticSearch")]
     class EsWriter : CovalencePlugin
     {
+        private Dictionary<ulong, PluginPlayer> PluginPlayers = new Dictionary<ulong, PluginPlayer>();
+
         private void Init()
         {
             Puts("Initialized ES writer");
@@ -19,23 +21,20 @@ namespace Oxide.Plugins
 
         void OnPlayerInit(BasePlayer player)
         {
-            CreateOrUpdatePlayer(GetPlayer(player));
+            PluginPlayers.Add(player.userID, GetPlayer(player));
         }
 
         void OnPlayerDisconnected(BasePlayer player, string reason)
         {
-            CreateOrUpdatePlayer(GetPlayer(player));
+            PluginPlayers.Remove(player.userID);
         }
 
         private void OnServerSave()
         {
-            foreach (var player in BasePlayer.activePlayerList)
+            //save data
+            foreach (var player in PluginPlayers)
             {
-                if (!player.IsConnected)
-                {
-                    continue;
-                }
-                CreateOrUpdatePlayer(GetPlayer(player));
+                CreateOrUpdatePlayer(PluginPlayers[player.Key]);
             }
         }
 
@@ -69,7 +68,6 @@ namespace Oxide.Plugins
             serializablePlayer.name = player.displayName;
             serializablePlayer.isOnline = player.IsConnected;
             return serializablePlayer;
-
         }
 
         class PluginPlayer
