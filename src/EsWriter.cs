@@ -22,6 +22,11 @@ namespace Oxide.Plugins
             CreateOrUpdatePlayer(GetPlayer(player));
         }
 
+        void OnPlayerDisconnected(BasePlayer player, string reason)
+        {
+            CreateOrUpdatePlayer(GetPlayer(player));
+        }
+
         private void OnServerSave()
         {
             foreach (var player in BasePlayer.activePlayerList)
