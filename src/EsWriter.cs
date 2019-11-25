@@ -17,38 +17,9 @@ namespace Oxide.Plugins
             Puts("Initialized ES writer");
         }
 
-        object OnPlayerDie(BasePlayer player, HitInfo info)
-        {
-            var attacker = info.InitiatorPlayer;
-            if (attacker == null || attacker.IsNpc)
-            {
-                return null;
-            }
-            else
-            {
-                IDictionary<int, string> lastKiller = new Dictionary<int, string>();
-                lastKiller.Add(1,attacker.displayName);
-                var data = JsonConvert.SerializeObject(lastKiller);
-                CreateOrUpdatePlayer(player.userID, data);
-            }
-
-            return null;
-        }
-
         void OnPlayerInit(BasePlayer player)
         {
-            var data = JsonConvert.SerializeObject(InitPluginPlayer(player));
-            CreateOrUpdatePlayer(player.userID, data);
-        }
-
-        void OnPlayerDisconnected(BasePlayer player, string reason)
-        {
-            UpdatePlayerStatus(player, false);
-        }
-
-        void OnPlayerKicked(BasePlayer player, string reason)
-        {
-            UpdatePlayerStatus(player, false);
+            CreateOrUpdatePlayer(GetPlayer(player));
         }
 
         private void OnServerSave()
@@ -56,15 +27,18 @@ namespace Oxide.Plugins
             foreach (var player in BasePlayer.activePlayerList)
             {
                 if (!player.IsConnected)
+                {
                     continue;
-                UpdatePlayerStats(player);
+                }
+                CreateOrUpdatePlayer(GetPlayer(player));
             }
         }
 
-        void CreateOrUpdatePlayer(ulong id, string data)
+        void CreateOrUpdatePlayer(PluginPlayer player)
         {
+            var data = JsonConvert.SerializeObject(player);
             Dictionary<string, string> headers = new Dictionary<string, string> {{"Content-Type", "application/json"}};
-            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, data, (code, response) =>
+            webrequest.Enqueue("http://localhost:9200/players/_doc/" + player.id, data, (code, response) =>
             {
                 if (code != 200 || response == null)
                 {
@@ -76,15 +50,7 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        PluginPlayer InitPluginPlayer(BasePlayer player)
-        {
-            var esPlayer = new PluginPlayer();
-            esPlayer.name = player.displayName;
-            esPlayer.isOnline = true;
-            return esPlayer;
-        }
-
-        void UpdatePlayerStats(BasePlayer player)
+        PluginPlayer GetPlayer(BasePlayer player)
         {
             ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
             var stats = new PluginPlayerStats();
@@ -92,17 +58,13 @@ namespace Oxide.Plugins
             stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
             stats.headShots = storage.Get("headshot");
             stats.suicides = storage.Get("death_suicide");
-            var data = JsonConvert.SerializeObject(stats);
-            CreateOrUpdatePlayer(player.userID, data);
-        }
+            var serializablePlayer = new PluginPlayer();
+            serializablePlayer.stats = stats;
+            serializablePlayer.id = player.userID;
+            serializablePlayer.name = player.displayName;
+            serializablePlayer.isOnline = player.IsConnected;
+            return serializablePlayer;
 
-        void UpdatePlayerStatus(BasePlayer player,  bool isConnected)
-        {
-            var pl = new PluginPlayer();
-            pl.name = player.displayName;
-            pl.isOnline = isConnected;
-            var data = JsonConvert.SerializeObject(pl);
-            CreateOrUpdatePlayer(player.userID, data);
         }
 
         class PluginPlayer
