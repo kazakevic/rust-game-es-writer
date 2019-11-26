@@ -21,21 +21,21 @@ namespace Oxide.Plugins
 
         void OnPlayerInit(BasePlayer player)
         {
-            PluginPlayers.Add(player.userID, GetPlayer(player));
-        }
-
-        void OnPlayerDisconnected(BasePlayer player, string reason)
-        {
-            PluginPlayers.Remove(player.userID);
+            UpdatePlayerBaseData(player);
         }
 
         private void OnServerSave()
         {
-            //save data
-            foreach (var player in PluginPlayers)
+            foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
-                CreateOrUpdatePlayer(PluginPlayers[player.Key]);
+               UpdatePlayerBaseData(activePlayer);
             }
+
+        }
+
+        void UpdatePlayerBaseData(BasePlayer player)
+        {
+            CreateOrUpdatePlayer(GetPlayer(player));
         }
 
         void CreateOrUpdatePlayer(PluginPlayer player)
