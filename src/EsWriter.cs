@@ -26,6 +26,7 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
+            GetPlayerFromDb(76561199003209342);
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
                UpdatePlayerBaseData(activePlayer);
@@ -52,6 +53,22 @@ namespace Oxide.Plugins
 
                 Puts($"Answered: {response}");
             }, this, RequestMethod.PUT, headers);
+        }
+
+        PluginPlayer GetPlayerFromDb(ulong id)
+        {
+            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
+            {
+                if (code != 200 || response == null)
+                {
+                    Puts($"not good response!");
+                    return;
+                }
+
+                Puts($"Answered: {response}");
+            }, this, RequestMethod.GET);
+
+            return new PluginPlayer();
         }
 
         PluginPlayer GetPlayer(BasePlayer player)
