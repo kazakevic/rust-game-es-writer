@@ -77,6 +77,16 @@ namespace Oxide.Plugins
             CreateOrUpdatePlayer(playerFromDb);
         }
 
+        private void OnEntityTakeDamage(BaseCombatEntity entity, HitInfo info)
+        {
+            if (info?.InitiatorPlayer == null || !info.isHeadshot)
+                return;
+
+            var playerFromDb = GetPlayerFromDb(info.InitiatorPlayer.userID);
+            playerFromDb.Stats.headShots++;
+            CreateOrUpdatePlayer(playerFromDb);
+        }
+
         private void OnServerSave()
         {
 
