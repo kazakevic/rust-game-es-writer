@@ -63,7 +63,7 @@ namespace Oxide.Plugins
                 IList<JToken> results = playerData["_source"].ToList();
                 foreach (JToken result in results)
                 {
-                    Puts($"Result {result}");
+                    Puts($"Result ------- {result}");
                 }
 
 
