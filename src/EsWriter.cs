@@ -2,9 +2,11 @@ using Oxide.Core.Libraries;
 using Oxide.Core.Plugins;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Oxide.Game.Rust.Libraries;
 using Server = Rust.Server;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Oxide.Plugins
 {
@@ -62,10 +64,9 @@ namespace Oxide.Plugins
                     Puts($"not good response!");
                     return;
                 }
-
-                var data = JsonConvert.DeserializeObject(response);
-                Puts($"not good response! {data._source}");
-
+                JObject googleSearch = JObject.Parse(response);
+                IList<JToken> results = googleSearch["responseData"]["_source"].Children().ToList();
+                Puts($"not good response! {results}");
             }, this);
 
             return new PluginPlayer();
