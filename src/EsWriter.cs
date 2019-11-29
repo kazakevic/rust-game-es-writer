@@ -17,7 +17,7 @@ namespace Oxide.Plugins
     [Description("Writes data to ElasticSearch")]
     class EsWriter : CovalencePlugin
     {
-        //private Dictionary<ulong, PluginPlayer> PluginPlayers = new Dictionary<ulong, PluginPlayer>();
+        private static readonly Time Time = GetLibrary<Time>();
 
         private void Init()
         {
@@ -106,6 +106,20 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
+        void StoreMessage(Message msg)
+        {
+            var data = JsonConvert.SerializeObject(msg);
+            Dictionary<string, string> headers = new Dictionary<string, string> {{"Content-Type", "application/json"}};
+            webrequest.Enqueue("http://localhost:9200/messages/_doc", data, (code, response) =>
+            {
+                if (code != 200 || response == null)
+                {
+                    Puts($"not good response!");
+                    return;
+                }
+            }, this, RequestMethod.POST, headers);
+        }
+
         PluginPlayer GetPlayerFromDb(ulong id)
         {
             PluginPlayer res = null;
@@ -147,6 +161,13 @@ namespace Oxide.Plugins
             public int deaths;
             public int headShots;
             public int suicides;
+        }
+
+        class Message
+        {
+            public ulong From;
+            public string Msg;
+            public Time CreatedAt;
         }
     }
 }
