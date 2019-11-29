@@ -50,8 +50,6 @@ namespace Oxide.Plugins
                     Puts($"not good response!");
                     return;
                 }
-
-                Puts($"Answered: {response}");
             }, this, RequestMethod.PUT, headers);
         }
 
@@ -65,8 +63,10 @@ namespace Oxide.Plugins
                     return;
                 }
 
-                Puts($"Answered: {response}");
-            }, this, RequestMethod.GET);
+                var data = JsonConvert.DeserializeObject(response);
+                Puts($"not good response! {data}");
+
+            }, this);
 
             return new PluginPlayer();
         }
