@@ -29,7 +29,17 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
-           var pl = GetPlayerFromDb(76561198115425683);
+           var pl = GetPlayerFromDb(7656119811542568311);
+
+           if (pl == null)
+           {
+               Puts($"null");
+           }
+           else
+           {
+               Puts($"ok");
+           }
+
            Puts($"VOOOO: {pl.Name}");
 
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
