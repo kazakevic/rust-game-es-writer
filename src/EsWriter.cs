@@ -65,7 +65,7 @@ namespace Oxide.Plugins
                     return;
                 }
                 JObject googleSearch = JObject.Parse(response);
-                IList<JToken> results = googleSearch["responseData"]["_source"].Children().ToList();
+                IList<JToken> results = googleSearch["_source"].Children().ToList();
                 Puts($"not good response! {results}");
             }, this);
 
