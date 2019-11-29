@@ -61,7 +61,7 @@ namespace Oxide.Plugins
             {
                 JObject playerData = JObject.Parse(response);
                 IList<JToken> results = playerData["_source"].ToList();
-                Puts($"not good response! {results}");
+                Puts($"Result {results}");
             }, this);
 
             return new PluginPlayer();
