@@ -1,3 +1,4 @@
+using System.Collections;
 using Oxide.Core.Libraries;
 using Oxide.Core.Plugins;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Oxide.Plugins
     [Description("Writes data to ElasticSearch")]
     class EsWriter : CovalencePlugin
     {
-        private Dictionary<ulong, PluginPlayer> PluginPlayers = new Dictionary<ulong, PluginPlayer>();
+        //private Dictionary<ulong, PluginPlayer> PluginPlayers = new Dictionary<ulong, PluginPlayer>();
 
         private void Init()
         {
@@ -28,12 +29,13 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
-            GetPlayerFromDb(76561198115425683);
+           var pl = GetPlayerFromDb(76561198115425683);
+           Puts($"Aaaaaa {pl.First().name}");
+
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
                UpdatePlayerBaseData(activePlayer);
             }
-
         }
 
         void UpdatePlayerBaseData(BasePlayer player)
@@ -55,21 +57,22 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        PluginPlayer GetPlayerFromDb(ulong id)
+        IList<PluginPlayer> GetPlayerFromDb(ulong id)
         {
+            IList<PluginPlayer> pluginPlayers = new List<PluginPlayer>();
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
                 JObject playerData = JObject.Parse(response);
                 IList<JToken> results = playerData["_source"].ToList();
-                var pluginPlayer = new PluginPlayer();
                 foreach (JToken result in results)
                 {
-                    Puts($"Result ------- {result.Value<string>()}");
+                    var pluginPlayer = result.ToObject<PluginPlayer>();
+                    pluginPlayers.Add(pluginPlayer);
                 }
 
             }, this);
 
-            return new PluginPlayer();
+            return pluginPlayers;
         }
 
         PluginPlayer GetPlayer(BasePlayer player)
