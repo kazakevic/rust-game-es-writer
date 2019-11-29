@@ -28,7 +28,7 @@ namespace Oxide.Plugins
 
         private void OnServerSave()
         {
-            GetPlayerFromDb(76561199003209342);
+            GetPlayerFromDb(76561198115425683);
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
                UpdatePlayerBaseData(activePlayer);
@@ -59,9 +59,9 @@ namespace Oxide.Plugins
         {
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
-                JObject googleSearch = JObject.Parse(response);
-                IList<JToken> results = googleSearch["_source"].Children().ToList();
-                Puts($"not good response! {googleSearch}");
+                JObject playerData = JObject.Parse(response);
+                IList<JToken> results = playerData["_source"].ToList();
+                Puts($"not good response! {results}");
             }, this);
 
             return new PluginPlayer();
