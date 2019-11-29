@@ -60,6 +60,7 @@ namespace Oxide.Plugins
         PluginPlayer GetPlayerFromDb(ulong id)
         {
             IList<PluginPlayer> pluginPlayers = new List<PluginPlayer>();
+            var pluginPlayer = new PluginPlayer();
 
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
@@ -67,7 +68,7 @@ namespace Oxide.Plugins
                 // get JSON result objects into a list
                 IList<JToken> results = parsedResponse["_source"].ToList();
                 Puts($"Result list {results} \n");
-                var pluginPlayer = new PluginPlayer();
+
 
                 foreach (JToken result in results)
                 {
