@@ -30,7 +30,7 @@ namespace Oxide.Plugins
         private void OnServerSave()
         {
            var pl = GetPlayerFromDb(76561198115425683);
-           Puts($"VOOOO:    {pl.Name}");
+           Puts($"VOOOO: {pl.Name}");
 
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
@@ -64,18 +64,8 @@ namespace Oxide.Plugins
 
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
-                pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(response);
                 JObject parsedResponse = JObject.Parse(response);
-                // get JSON result objects into a list
-                IList<JToken> results = parsedResponse["_source"].ToList();
-                Puts($"Result list {results} \n");
-
-
-                foreach (JToken result in results)
-                {
-                    Puts($" result: {result.ToString()}  \n");
-                }
-
+                pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
             }, this);
 
             return pluginPlayer;
