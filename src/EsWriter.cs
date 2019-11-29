@@ -65,7 +65,9 @@ namespace Oxide.Plugins
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
                 JObject parsedResponse = JObject.Parse(response);
+                Puts($"STOROO: {parsedResponse["_source"].ToString(Formatting.None)}");
                 pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
+                Puts($"STOROO: { pluginPlayer.Name}");
             }, this);
 
             return pluginPlayer;
