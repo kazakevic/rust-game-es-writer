@@ -59,11 +59,6 @@ namespace Oxide.Plugins
         {
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
-                if (code != 200 || response == null)
-                {
-                    Puts($"not good response!");
-                    return;
-                }
                 JObject googleSearch = JObject.Parse(response);
                 IList<JToken> results = googleSearch["_source"].Children().ToList();
                 Puts($"not good response! {results}");
