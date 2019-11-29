@@ -64,7 +64,7 @@ namespace Oxide.Plugins
                 }
 
                 var data = JsonConvert.DeserializeObject(response);
-                Puts($"not good response! {data}");
+                Puts($"not good response! {data._source}");
 
             }, this);
 
