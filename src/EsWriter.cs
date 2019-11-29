@@ -64,7 +64,7 @@ namespace Oxide.Plugins
                 var pluginPlayer = new PluginPlayer();
                 foreach (JToken result in results)
                 {
-                    Puts($"Result ------- {result.Value<name>()}");
+                    Puts($"Result ------- {result.Value<string>()}");
                 }
 
             }, this);
