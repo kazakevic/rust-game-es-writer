@@ -30,7 +30,6 @@ namespace Oxide.Plugins
         private void OnServerSave()
         {
            var pl = GetPlayerFromDb(76561198115425683);
-           Puts($"Aaaaaa {pl.First().name}");
 
             foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
             {
@@ -89,10 +88,10 @@ namespace Oxide.Plugins
             stats.headShots = storage.Get("headshot");
             stats.suicides = storage.Get("death_suicide");
             var serializablePlayer = new PluginPlayer();
-            serializablePlayer.stats = stats;
-            serializablePlayer.id = player.userID;
-            serializablePlayer.name = player.displayName;
-            serializablePlayer.isOnline = player.IsConnected;
+           // serializablePlayer.stats = stats;
+            //serializablePlayer.id = player.userID;
+           // serializablePlayer.name = player.displayName;
+           // serializablePlayer.set = player.IsConnected;
             return serializablePlayer;
         }
 
