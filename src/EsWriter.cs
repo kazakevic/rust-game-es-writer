@@ -24,33 +24,60 @@ namespace Oxide.Plugins
 
         void OnPlayerInit(BasePlayer player)
         {
-            UpdatePlayerBaseData(player);
+            var playerFromDb = GetPlayerFromDb(player.userID);
+            if (playerFromDb == null)
+            {
+                CreateOrUpdatePlayer(InitPluginPlayer(player));
+            }
+            else
+            {
+                playerFromDb.IsOnline = true;
+                CreateOrUpdatePlayer(playerFromDb);
+            }
+        }
+
+        void OnPlayerDisconnected(BasePlayer player, string reason)
+        {
+            var playerFromDb = GetPlayerFromDb(player.userID);
+            playerFromDb.IsOnline = false;
+            CreateOrUpdatePlayer(playerFromDb);
+        }
+
+        void OnPlayerKicked(BasePlayer player, string reason)
+        {
+            var playerFromDb = GetPlayerFromDb(player.userID);
+            playerFromDb.IsOnline = false;
+            CreateOrUpdatePlayer(playerFromDb);;
+        }
+
+        private void OnPlayerDie(BasePlayer player, HitInfo info)
+        {
+            if (info == null || player == null || player.IsNpc)
+                return;
+
+            var playerFromDb = GetPlayerFromDb(player.userID);
+
+            var stats = playerFromDb.Stats;
+
+            if (info.damageTypes.GetMajorityDamageType() == DamageType.Suicide)
+                stats.suicides++;
+            else
+            {
+                stats.deaths++;
+                var attacker = info.InitiatorPlayer;
+                if (attacker == null || attacker.IsNpc)
+                    return;
+
+                var attackerFromDb = GetPlayerFromDb(attacker.userID);
+                attackerFromDb.Stats.kills++;
+                CreateOrUpdatePlayer(attackerFromDb);
+            }
+            CreateOrUpdatePlayer(playerFromDb);
         }
 
         private void OnServerSave()
         {
-           var pl = GetPlayerFromDb(7656119811542568311);
 
-           if (pl == null)
-           {
-               Puts($"null");
-           }
-           else
-           {
-               Puts($"ok");
-           }
-
-           Puts($"VOOOO: {pl.Name}");
-
-            foreach (BasePlayer activePlayer in BasePlayer.activePlayerList)
-            {
-               UpdatePlayerBaseData(activePlayer);
-            }
-        }
-
-        void UpdatePlayerBaseData(BasePlayer player)
-        {
-            CreateOrUpdatePlayer(GetPlayer(player));
         }
 
         void CreateOrUpdatePlayer(PluginPlayer player)
@@ -79,20 +106,19 @@ namespace Oxide.Plugins
             return res;
         }
 
-        PluginPlayer GetPlayer(BasePlayer player)
+        PluginPlayer InitPluginPlayer(BasePlayer player)
         {
-            ServerStatistics.Storage storage = ServerStatistics.Get(player.userID);
-            var stats = new PluginPlayerStats();
-            stats.kills = storage.Get("kill_player");
-            stats.deaths = (storage.Get("deaths") - storage.Get("death_suicide"));
-            stats.headShots = storage.Get("headshot");
-            stats.suicides = storage.Get("death_suicide");
-            var serializablePlayer = new PluginPlayer();
-           // serializablePlayer.stats = stats;
-            //serializablePlayer.id = player.userID;
-           // serializablePlayer.name = player.displayName;
-           // serializablePlayer.set = player.IsConnected;
-            return serializablePlayer;
+            PluginPlayer pluginPlayer = new PluginPlayer();
+            PluginPlayerStats stats = new PluginPlayerStats();
+            stats.deaths = 0;
+            stats.kills = 0;
+            stats.suicides = 0;
+            stats.headShots = 0;
+            pluginPlayer.Name = player.displayName;
+            pluginPlayer.Id = player.userID;
+            pluginPlayer.IsOnline = true;
+            pluginPlayer.Stats = stats;
+            return pluginPlayer;
         }
 
         class PluginPlayer
