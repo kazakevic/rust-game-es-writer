@@ -61,11 +61,11 @@ namespace Oxide.Plugins
             {
                 JObject playerData = JObject.Parse(response);
                 IList<JToken> results = playerData["_source"].ToList();
+                var pluginPlayer = new PluginPlayer();
                 foreach (JToken result in results)
                 {
-                    Puts($"Result ------- {result}");
+                    Puts($"Result ------- {result.Value<name>()}");
                 }
-
 
             }, this);
 
