@@ -57,22 +57,26 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        IList<PluginPlayer> GetPlayerFromDb(ulong id)
+        PluginPlayer GetPlayerFromDb(ulong id)
         {
             IList<PluginPlayer> pluginPlayers = new List<PluginPlayer>();
+
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
-                JObject playerData = JObject.Parse(response);
-                IList<JToken> results = playerData["_source"].ToList();
+                JObject parsedResponse = JObject.Parse(response);
+                // get JSON result objects into a list
+                IList<JToken> results = parsedResponse["_source"].ToList();
+                Puts($"Result list {results} \n");
+                var pluginPlayer = new PluginPlayer();
+
                 foreach (JToken result in results)
                 {
-                    var pluginPlayer = result.ToObject<PluginPlayer>();
-                    pluginPlayers.Add(pluginPlayer);
+                    Puts($" result: {result.ToString()}  \n");
                 }
 
             }, this);
 
-            return pluginPlayers;
+            return pluginPlayer;
         }
 
         PluginPlayer GetPlayer(BasePlayer player)
@@ -93,10 +97,10 @@ namespace Oxide.Plugins
 
         class PluginPlayer
         {
-            public ulong id;
-            public string name;
-            public bool isOnline;
-            public PluginPlayerStats stats;
+            private ulong Id { get; set; }
+            private string Name { get; set; }
+            private bool IsOnline { get; set; }
+            private PluginPlayerStats Stats { get; set; }
         }
 
         class PluginPlayerStats
