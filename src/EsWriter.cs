@@ -87,9 +87,13 @@ namespace Oxide.Plugins
             CreateOrUpdatePlayer(playerFromDb);
         }
 
-        private void OnServerSave()
+        object OnMessagePlayer(string message, BasePlayer player)
         {
-
+            Message msg = new Message();
+            msg.From = player.userID;
+            msg.Msg = message;
+            msg.CreatedAt = Time.GetUnixTimestamp();
+            return null;
         }
 
         void CreateOrUpdatePlayer(PluginPlayer player)
@@ -167,7 +171,7 @@ namespace Oxide.Plugins
         {
             public ulong From;
             public string Msg;
-            public Time CreatedAt;
+            public uint CreatedAt;
         }
     }
 }
