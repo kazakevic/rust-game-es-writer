@@ -8,6 +8,7 @@ using Oxide.Game.Rust.Libraries;
 using Server = Rust.Server;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rust;
 
 namespace Oxide.Plugins
 {
