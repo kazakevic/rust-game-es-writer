@@ -46,7 +46,7 @@ namespace Oxide.Plugins
         {
             var data = JsonConvert.SerializeObject(player);
             Dictionary<string, string> headers = new Dictionary<string, string> {{"Content-Type", "application/json"}};
-            webrequest.Enqueue("http://localhost:9200/players/_doc/" + player.id, data, (code, response) =>
+            webrequest.Enqueue("http://localhost:9200/players/_doc/" + player.Id, data, (code, response) =>
             {
                 if (code != 200 || response == null)
                 {
@@ -97,10 +97,10 @@ namespace Oxide.Plugins
 
         class PluginPlayer
         {
-            private ulong Id { get; set; }
-            private string Name { get; set; }
-            private bool IsOnline { get; set; }
-            private PluginPlayerStats Stats { get; set; }
+            public ulong Id;
+            public string Name;
+            public bool IsOnline;
+            public PluginPlayerStats Stats;
         }
 
         class PluginPlayerStats
