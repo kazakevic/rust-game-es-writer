@@ -61,7 +61,7 @@ namespace Oxide.Plugins
             {
                 JObject googleSearch = JObject.Parse(response);
                 IList<JToken> results = googleSearch["_source"].Children().ToList();
-                Puts($"not good response! {results}");
+                Puts($"not good response! {googleSearch}");
             }, this);
 
             return new PluginPlayer();
