@@ -59,18 +59,14 @@ namespace Oxide.Plugins
 
         PluginPlayer GetPlayerFromDb(ulong id)
         {
-            IList<PluginPlayer> pluginPlayers = new List<PluginPlayer>();
-            var pluginPlayer = new PluginPlayer();
-
+            PluginPlayer res = null;
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
             {
                 JObject parsedResponse = JObject.Parse(response);
-                Puts($"STOROO: {parsedResponse["_source"].ToString(Formatting.None)}");
-                pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
-                Puts($"STOROO: { pluginPlayer.Name}");
+                PluginPlayer pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
+                res = pluginPlayer;
             }, this);
-
-            return pluginPlayer;
+            return res;
         }
 
         PluginPlayer GetPlayer(BasePlayer player)
