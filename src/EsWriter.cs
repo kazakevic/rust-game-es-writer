@@ -127,12 +127,13 @@ namespace Oxide.Plugins
         PluginPlayer GetPlayerFromDb(ulong id)
         {
             PluginPlayer res = null;
-            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, (code, response) =>
-            {
+
+            Action<int> callback = response => {
                 JObject parsedResponse = JObject.Parse(response);
                 PluginPlayer pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
-                res = pluginPlayer;
-            }, this);
+            };
+
+            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, callback, this);
             return res;
         }
 
