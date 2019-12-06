@@ -19,81 +19,17 @@ namespace Oxide.Plugins
     {
         private static readonly Time Time = GetLibrary<Time>();
 
+        private PluginPlayer currentPlayer;
+
         private void Init()
         {
             Puts("Initialized ES writer");
         }
 
-        void OnPlayerInit(BasePlayer player)
+        void OnServerSave()
         {
-            var playerFromDb = GetPlayerFromDb(player.userID);
-            if (playerFromDb == null)
-            {
-                CreateOrUpdatePlayer(InitPluginPlayer(player));
-            }
-            else
-            {
-                playerFromDb.IsOnline = true;
-                CreateOrUpdatePlayer(playerFromDb);
-            }
-        }
-
-        void OnPlayerDisconnected(BasePlayer player, string reason)
-        {
-            var playerFromDb = GetPlayerFromDb(player.userID);
-            playerFromDb.IsOnline = false;
-            CreateOrUpdatePlayer(playerFromDb);
-        }
-
-        void OnPlayerKicked(BasePlayer player, string reason)
-        {
-            var playerFromDb = GetPlayerFromDb(player.userID);
-            playerFromDb.IsOnline = false;
-            CreateOrUpdatePlayer(playerFromDb);;
-        }
-
-        private void OnPlayerDie(BasePlayer player, HitInfo info)
-        {
-            if (info == null || player == null || player.IsNpc)
-                return;
-
-            var playerFromDb = GetPlayerFromDb(player.userID);
-
-            var stats = playerFromDb.Stats;
-
-            if (info.damageTypes.GetMajorityDamageType() == DamageType.Suicide)
-                stats.suicides++;
-            else
-            {
-                stats.deaths++;
-                var attacker = info.InitiatorPlayer;
-                if (attacker == null || attacker.IsNpc)
-                    return;
-
-                var attackerFromDb = GetPlayerFromDb(attacker.userID);
-                attackerFromDb.Stats.kills++;
-                CreateOrUpdatePlayer(attackerFromDb);
-            }
-            CreateOrUpdatePlayer(playerFromDb);
-        }
-
-        private void OnEntityTakeDamage(BaseCombatEntity entity, HitInfo info)
-        {
-            if (info?.InitiatorPlayer == null || !info.isHeadshot)
-                return;
-
-            var playerFromDb = GetPlayerFromDb(info.InitiatorPlayer.userID);
-            playerFromDb.Stats.headShots++;
-            CreateOrUpdatePlayer(playerFromDb);
-        }
-
-        object OnMessagePlayer(string message, BasePlayer player)
-        {
-            Message msg = new Message();
-            msg.From = player.userID;
-            msg.Msg = message;
-            msg.CreatedAt = Time.GetUnixTimestamp();
-            return null;
+            GetPlayerFromDb(76561198216484769);
+            Puts($" laaa { this.currentPlayer.Name }");
         }
 
         void CreateOrUpdatePlayer(PluginPlayer player)
@@ -110,31 +46,49 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        void StoreMessage(Message msg)
+        void GetAndUpdatePlayer(ulong id, Action<int, string> callback)
         {
-            var data = JsonConvert.SerializeObject(msg);
-            Dictionary<string, string> headers = new Dictionary<string, string> {{"Content-Type", "application/json"}};
-            webrequest.Enqueue("http://localhost:9200/messages/_doc", data, (code, response) =>
+            Action<int, string> GetPlayerCallBack = (code, response) =>
             {
                 if (code != 200 || response == null)
                 {
-                    Puts($"not good response!");
                     return;
                 }
-            }, this, RequestMethod.POST, headers);
+
+                var deserializedPlayer = DeserializePlayer(response);
+                if (deserializedPlayer != null)
+                {
+                    CreateOrUpdatePlayer(deserializedPlayer);
+                }
+            };
+            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, GetPlayerCallBack, this);
         }
 
-        PluginPlayer GetPlayerFromDb(ulong id)
+        PluginPlayer DeserializePlayer(string response)
         {
-            PluginPlayer res = null;
+            PluginPlayer pluginPlayer = null;
+            JObject parsedResponse = JObject.Parse(response);
+            pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
+            return pluginPlayer;
+        }
 
-            Action<int> callback = response => {
+        bool GetPlayerFromDb(ulong id)
+        {
+            var done = false;
+            Action<int, string> callback = (code, response) =>
+            {
+                if (code != 200 || response == null)
+                {
+                    done = true;
+                }
                 JObject parsedResponse = JObject.Parse(response);
                 PluginPlayer pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
+                done = true;
+                this.currentPlayer = pluginPlayer;
             };
 
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, callback, this);
-            return res;
+            return done;
         }
 
         PluginPlayer InitPluginPlayer(BasePlayer player)
@@ -155,24 +109,24 @@ namespace Oxide.Plugins
         class PluginPlayer
         {
             public ulong Id;
-            public string Name;
             public bool IsOnline;
+            public string Name;
             public PluginPlayerStats Stats;
         }
 
         class PluginPlayerStats
         {
-            public int kills;
             public int deaths;
             public int headShots;
+            public int kills;
             public int suicides;
         }
 
         class Message
         {
+            public uint CreatedAt;
             public ulong From;
             public string Msg;
-            public uint CreatedAt;
         }
     }
 }
