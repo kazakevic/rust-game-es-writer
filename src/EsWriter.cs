@@ -19,8 +19,6 @@ namespace Oxide.Plugins
     {
         private static readonly Time Time = GetLibrary<Time>();
 
-        private PluginPlayer currentPlayer;
-
         private void Init()
         {
             Puts("Initialized ES writer");
@@ -28,8 +26,13 @@ namespace Oxide.Plugins
 
         void OnServerSave()
         {
-            GetPlayerFromDb(76561198216484769);
-            Puts($" laaa { this.currentPlayer.Name }");
+            GetPlayerFromDb(76561198216484769, (code, response) =>
+            {
+                if (code != 200 || response == null) { return; }
+                var playerFromDb = DeserializeResponse(response);
+                Puts($"Player {playerFromDb.Name}");
+            });
+
         }
 
         void CreateOrUpdatePlayer(PluginPlayer player)
@@ -46,24 +49,6 @@ namespace Oxide.Plugins
             }, this, RequestMethod.PUT, headers);
         }
 
-        void GetAndUpdatePlayer(ulong id, Action<int, string> callback)
-        {
-            Action<int, string> GetPlayerCallBack = (code, response) =>
-            {
-                if (code != 200 || response == null)
-                {
-                    return;
-                }
-
-                var deserializedPlayer = DeserializePlayer(response);
-                if (deserializedPlayer != null)
-                {
-                    CreateOrUpdatePlayer(deserializedPlayer);
-                }
-            };
-            webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, GetPlayerCallBack, this);
-        }
-
         PluginPlayer DeserializePlayer(string response)
         {
             PluginPlayer pluginPlayer = null;
@@ -72,23 +57,15 @@ namespace Oxide.Plugins
             return pluginPlayer;
         }
 
-        bool GetPlayerFromDb(ulong id)
+        void GetPlayerFromDb(ulong id,  Action<int, string> callback)
         {
-            var done = false;
-            Action<int, string> callback = (code, response) =>
-            {
-                if (code != 200 || response == null)
-                {
-                    done = true;
-                }
-                JObject parsedResponse = JObject.Parse(response);
-                PluginPlayer pluginPlayer = JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
-                done = true;
-                this.currentPlayer = pluginPlayer;
-            };
-
             webrequest.Enqueue("http://localhost:9200/players/_doc/" + id, null, callback, this);
-            return done;
+        }
+
+        PluginPlayer DeserializeResponse(string response)
+        {
+            JObject parsedResponse = JObject.Parse(response);
+            return JsonConvert.DeserializeObject<PluginPlayer>(parsedResponse["_source"].ToString(Formatting.None));
         }
 
         PluginPlayer InitPluginPlayer(BasePlayer player)
