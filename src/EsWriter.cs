@@ -1,14 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Oxide.Core;
 using Oxide.Core.Libraries;
-using Oxide.Core.Libraries.Covalence;
-using Oxide.Core.Plugins;
-using Rust;
-using UnityEngine;
 using Time = Oxide.Core.Libraries.Time;
 
 namespace Oxide.Plugins
@@ -24,14 +18,73 @@ namespace Oxide.Plugins
             Puts("Initialized ES writer");
         }
 
-        void OnServerSave()
+        void OnPlayerInit(BasePlayer player)
         {
-            GetPlayerFromDb(76561198216484769, (code, response) =>
+            GetPlayerFromDb(player.userID, (code, response) =>
+            {
+                Puts($"Code response: {code} {response}");
+                if (code == 404)
+                {
+                    Puts("ok ok ok ok ");
+                    //new player
+                    CreateOrUpdatePlayer(InitPluginPlayer(player));
+                }
+                else
+                {
+                    var playerFromDb = DeserializeResponse(response);
+                    playerFromDb.IsOnline = true;
+                    CreateOrUpdatePlayer(playerFromDb);
+                }
+
+            });
+        }
+
+        void OnPlayerDisconnected(BasePlayer player, string reason)
+        {
+            GetPlayerFromDb(player.userID, (code, response) =>
             {
                 if (code != 200 || response == null) { return; }
                 var playerFromDb = DeserializeResponse(response);
-                Puts($"Player {playerFromDb.Name}");
+                playerFromDb.IsOnline = false;
+                CreateOrUpdatePlayer(playerFromDb);
+                Puts($"Player goes offline: {playerFromDb.Id}");
             });
+        }
+
+        object OnPlayerDie(BasePlayer victim, HitInfo info)
+        {
+            var killer = info.InitiatorPlayer;
+
+            if (
+                killer == null ||
+                victim == null ||
+                killer == victim ||
+                victim.IsNpc
+                ) { return null; }
+
+            GetPlayerFromDb(victim.userID, (code, response) =>
+            {
+                if (code != 200 || response == null) { return; }
+                var playerFromDb = DeserializeResponse(response);
+                playerFromDb.Stats.deaths++;
+                CreateOrUpdatePlayer(playerFromDb);
+                Puts($"Player dies: {playerFromDb.Id}");
+            });
+
+            GetPlayerFromDb(killer.userID, (code, response) =>
+            {
+                if (code != 200 || response == null) { return; }
+                var playerFromDb = DeserializeResponse(response);
+                playerFromDb.Stats.kills++;
+                CreateOrUpdatePlayer(playerFromDb);
+                Puts($"Player dies: {playerFromDb.Id}");
+            });
+
+            return null;
+        }
+
+        void OnServerSave()
+        {
 
         }
 
